@@ -1,14 +1,15 @@
 #!/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
 HEIGHT=15
 WIDTH=90
 CHOICE_HEIGHT=4
-BACKTITLE="Fedora Setup Util - By Osiris - https://stealingthe.network"
+BACKTITLE="Fedora quick setup"
 TITLE="Make a selection"
 MENU="Please Choose one of the following options:"
 
+OH_MY_ZSH_URL="https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
 
+which dialog 1>/dev/null && echo "Dialog not installed, installing it" && sudo dnf -y install dialog
 
 OPTIONS=(1 "Enable RPM Fusion - Enables the RPM Fusion Repos"
          2 "Enable Better Fonts - Better font rendering by Dawid"
@@ -16,7 +17,8 @@ OPTIONS=(1 "Enable RPM Fusion - Enables the RPM Fusion Repos"
          4 "Enable Flatpak - Flatpak is installed by default but not enabled"
          5 "Install Software - Installs a bunch of my most used software"
          6 "Setup Flat Look - Installs and Enables the Flat GTK and Icon themes"
-         7 "Quit")
+         7 "Install ZSH and Oh My ZSH"
+         10 "Quit")
 
 while [ "$CHOICE -ne 4" ]; do
     CHOICE=$(dialog --clear \
@@ -52,19 +54,32 @@ while [ "$CHOICE -ne 4" ]; do
             notify-send "Flatpak has now been enabled" --expire-time=10
            ;;
         5)  echo "Installing Software"
-            sudo dnf install -y gnome-extensions-app gnome-tweaks gnome-shell-extension-appindicator gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel lame\* --exclude=lame-devel elementary-icon-theme deepin-icon-theme yaru-theme numix-gtk-theme moka-icon-theme greybird-dark-theme arc-theme tlp tlp-rdw vlc dropbox nautilus-dropbox dnfdragora paper-icon-theme flat-remix-icon-theme flat-remix-theme
+            sudo dnf install -y gnome-extensions-app gnome-tweaks gnome-shell-extension-appindicator gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel lame\* --exclude=lame-devel \
+                arc-theme dropbox nautilus-dropbox papirus-icon-theme neofetch
             notify-send "Software has been installed" --expire-time=10
            ;;
         6)  echo "Enabling Flat GTK and Icon Theme"
             sudo dnf install -y gnome-shell-extensions-user-theme
             gnome-extensions install user-theme@gnome-shell-extensions.gcampax.github.com
             gnome-extensions enable user-theme@gnome-shell-extensions.gcampax.github.com
-            gsettings set org.gnome.desktop.interface gtk-theme "Flat-Remix-GTK-Blue"
-            gsettings set org.gnome.desktop.wm.preferences theme "Flat-Remix-Blue"
-            gsettings set org.gnome.desktop.interface icon-theme 'Flat-Remix-Blue'
+            gsettings set org.gnome.desktop.interface gtk-theme "Arc-Dark-solid"
+            # gsettings set org.gnome.desktop.wm.preferences theme "Flat-Remix-Blue"
+            gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
             notify-send "There you go, that's better" --expire-time=10
            ;;
-        7)
+        7)  echo "Installing ZSH and Oh My ZSH"
+            sudo dnf -y install zsh util-linux-user
+            sh -c "$(curl -fsSL $OH_MY_ZSH_URL)"
+            if [ ! -f "$ZSHRC_FILE" ]; then
+		        cp -v zshrc_template $HOME
+		        echo ".zshrc file copied"
+	        fi
+            echo "Installing zsh_autosuggestions"
+            git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+            echo "change shell to ZSH"
+            ;;
+
+        10)
           exit 0
           ;;
     esac
