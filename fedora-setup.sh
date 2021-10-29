@@ -5,20 +5,29 @@ CHOICE_HEIGHT=4
 BACKTITLE="Fedora quick setup"
 TITLE="Make a selection"
 MENU="Please Choose one of the following options:"
+n_time=5
 
 OH_MY_ZSH_URL="https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+debug=True
 
+function pause(){
+ read -s -n 1 -p "Press any key to return to the menu"
+ echo ""
+}
 
-which dialog 1>/dev/null && echo "Dialog not installed, installing it" && sudo dnf -y install dialog
+which dialog 2>/dev/null
+ret=$?
+[[ $ret -eq 1 ]] && echo "Dialog not installed, installing it..." && sudo dnf -y install dialog
 
 OPTIONS=(1 "Enable RPM Fusion - Enables the RPM Fusion Repos"
          2 "Enable Better Fonts - Better font rendering by Dawid"
          3 "Speed up DNF - This enables fastestmirror, max downloads and deltarpms"
          4 "Enable Flatpak - Flatpak is installed by default but not enabled"
          5 "Install Software - Installs a bunch of my most used software"
-         6 "Setup Flat Look - Installs and Enables the Flat GTK and Icon themes"
+         6 "Setup ARC Theme - Installs and enables Arc Theme and Papirus Icons"
          7 "Install ZSH and Oh My ZSH"
-         10 "Quit")
+         8 "DNF tweaks - add default to yes"
+         99 "Quit")
 
 while [ "$CHOICE -ne 4" ]; do
     CHOICE=$(dialog --clear \
@@ -40,7 +49,7 @@ while [ "$CHOICE -ne 4" ]; do
             sudo -s dnf -y copr enable dawid/better_fonts
             sudo -s dnf install -y fontconfig-font-replacements
             sudo -s dnf install -y fontconfig-enhanced-defaults
-            notify-send "Fonts prettified - enjoy!" --expire-time=10
+            notify-send "Fonts prettified - enjoy!" --expire-time=$n_time
            ;;
         3)  echo "Speeding Up DNF"
             echo 'fastestmirror=1' | sudo tee -a /etc/dnf/dnf.conf
@@ -51,35 +60,50 @@ while [ "$CHOICE -ne 4" ]; do
         4)  echo "Enabling Flatpak"
             flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
             flatpak update
-            notify-send "Flatpak has now been enabled" --expire-time=10
+            notify-send "Flatpak has now been enabled" --expire-time=$n_time
            ;;
         5)  echo "Installing Software"
-            sudo dnf install -y gnome-extensions-app gnome-tweaks gnome-shell-extension-appindicator gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel lame\* --exclude=lame-devel \
-                arc-theme dropbox nautilus-dropbox papirus-icon-theme neofetch
-            notify-send "Software has been installed" --expire-time=10
+            sudo dnf install -y gnome-extensions-app gnome-tweaks gnome-shell-extension-appindicator\
+                arc-theme papirus-icon-theme neofetch vim
+            [[ $debug = True ]] && pause
+            notify-send "Software has been installed" --expire-time=$n_time
            ;;
         6)  echo "Enabling Flat GTK and Icon Theme"
-            sudo dnf install -y gnome-shell-extensions-user-theme
-            gnome-extensions install user-theme@gnome-shell-extensions.gcampax.github.com
-            gnome-extensions enable user-theme@gnome-shell-extensions.gcampax.github.com
+            sudo dnf install -y gnome-shell-extension-user-theme
+            # gnome-extensions install user-theme@gnome-shell-extension.gcampax.github.com
+            # gnome-extensions enable user-theme@gnome-shell-extension.gcampax.github.com
             gsettings set org.gnome.desktop.interface gtk-theme "Arc-Dark-solid"
-            # gsettings set org.gnome.desktop.wm.preferences theme "Flat-Remix-Blue"
+            gsettings set org.gnome.desktop.wm.preferences theme "Arc-Dark-solid"
             gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-            notify-send "There you go, that's better" --expire-time=10
+            [[ $debug = True ]] && pause
+            notify-send "There you go, that's better" --expire-time=$n_time
            ;;
         7)  echo "Installing ZSH and Oh My ZSH"
             sudo dnf -y install zsh util-linux-user
             sh -c "$(curl -fsSL $OH_MY_ZSH_URL)"
             if [ ! -f "$ZSHRC_FILE" ]; then
-		        cp -v zshrc_template $HOME
+		        cp -v zshrc_template ~/.zshrc
 		        echo ".zshrc file copied"
 	        fi
             echo "Installing zsh_autosuggestions"
             git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
             echo "change shell to ZSH"
+            chsh -s $(which zsh)
+            [[ $debug = True ]] && pause
+            ;;
+        8)  echo "Tweak DNF configuration"
+            grep defaultyes /etc/dnf/dnf.conf > /dev/null
+            ret=$?
+            if [[ $ret -eq 1 ]]; then
+                echo 'defaultyes=True' | sudo tee -a /etc/dnf/dnf.conf
+            else
+                echo "Tweak already applied"
+            fi
+            [[ $debug = True ]] && pause
             ;;
 
-        10)
+
+        99)
           exit 0
           ;;
     esac
