@@ -1,5 +1,5 @@
 #!/bin/bash
-HEIGHT=15
+HEIGHT=20
 WIDTH=90
 CHOICE_HEIGHT=4
 BACKTITLE="Fedora quick setup"
@@ -27,6 +27,7 @@ OPTIONS=(1 "Enable RPM Fusion - Enables the RPM Fusion Repos"
          6 "Setup ARC Theme - Installs and enables Arc Theme and Papirus Icons"
          7 "Install ZSH and Oh My ZSH"
          8 "DNF tweaks - add default to yes"
+         9 "Dump installed flatpaks"
          99 "Quit")
 
 while [ "$CHOICE -ne 4" ]; do
@@ -99,6 +100,10 @@ while [ "$CHOICE -ne 4" ]; do
             else
                 echo "Tweak already applied"
             fi
+            [[ $debug = True ]] && pause
+            ;;
+        9)  echo "Creating a list of installed flatpak"
+            flatpak list --app --columns=application | grep -v "Application ID" > flatpak.list
             [[ $debug = True ]] && pause
             ;;
 
