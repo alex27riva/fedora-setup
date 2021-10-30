@@ -1,5 +1,5 @@
 #!/bin/bash
-HEIGHT=20
+HEIGHT=18
 WIDTH=90
 CHOICE_HEIGHT=4
 BACKTITLE="Fedora quick setup"
